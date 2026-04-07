@@ -1,0 +1,19 @@
+# dependencies
+node_modules
+
+# builds
+/dist
+/server-dist
+
+# local runtime/temp
+tmp
+.cache
+*.log
+
+# editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.swp
+*.swo

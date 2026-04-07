@@ -1,0 +1,19 @@
+You are a plan document reviewer. Verify this plan is complete and ready for implementation.
+
+Plan to review: /home/mmounier/.openclaw/workspace/oepnclaw-skill-viewer/docs/superpowers/plans/2026-04-06-openclaw-skill-viewer.md
+Spec for reference: User request in current chat for a local OpenClaw skill viewer app derived from Stitch UI with library, detail tree viewer, live local browsing, ready-skill default, and history/diff.
+
+Check:
+- completeness (no placeholders or missing steps)
+- alignment with spec
+- actionable task decomposition
+- buildability by an implementer without guessing
+
+Only flag issues that would cause real implementation problems.
+
+Output:
+Status: Approved | Issues Found
+Issues:
+- [task/step]: [issue] - [why it matters]
+Recommendations:
+- [advisory suggestions]
