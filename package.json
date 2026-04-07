@@ -10,7 +10,7 @@
     "build": "tsc -p tsconfig.server.json && tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "node server-dist/index.js"
+    "start": "node server-dist/server/index.js"
   },
   "dependencies": {
     "chokidar": "^5.0.0",

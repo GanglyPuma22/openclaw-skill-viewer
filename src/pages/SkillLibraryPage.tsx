@@ -9,11 +9,19 @@ export function SkillLibraryPage() {
   const [skills, setSkills] = useState<SkillRecord[]>([])
   const [query, setQuery] = useState('')
   const [readyOnly, setReadyOnly] = useState(true)
+  const [error, setError] = useState('')
 
   const loadSkills = useCallback(async (force = false) => {
-    const result = await fetchSkills(force)
-    const sorted = [...result.skills].sort((a, b) => new Date(b.modifiedAt).getTime() - new Date(a.modifiedAt).getTime())
-    setSkills(sorted)
+    try {
+      setError('')
+      const result = await fetchSkills(force)
+      const sorted = [...result.skills].sort((a, b) => new Date(b.modifiedAt).getTime() - new Date(a.modifiedAt).getTime())
+      setSkills(sorted)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to load skills'
+      setError(message)
+      setSkills([])
+    }
   }, [])
 
   useEffect(() => {
@@ -48,7 +56,7 @@ export function SkillLibraryPage() {
         </div>
       </section>
       <section className="panel">
-        <SkillTable skills={filtered} />
+        {error ? <div className="viewer-empty">Failed to load skills: {error}</div> : <SkillTable skills={filtered} />}
       </section>
     </div>
   )

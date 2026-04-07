@@ -2,17 +2,34 @@ import type { FileContentResponse, FileTreeNode, HistoryEntry, SkillRecord } fro
 
 const cache = new Map<string, unknown>()
 
-async function requestJson<T>(url: string, force = false): Promise<T> {
-  if (!force && cache.has(url)) {
-    return cache.get(url) as T
+function getApiBase() {
+  if (typeof window === 'undefined') return ''
+
+  const { protocol, hostname, port } = window.location
+
+  if (port === '4173' || port === '5173' || port === '4174') {
+    return ''
   }
-  const response = await fetch(url)
+
+  return `${protocol}//${hostname}:4174`
+}
+
+export function apiUrl(path: string) {
+  return `${getApiBase()}${path}`
+}
+
+async function requestJson<T>(url: string, force = false): Promise<T> {
+  const resolvedUrl = apiUrl(url)
+  if (!force && cache.has(resolvedUrl)) {
+    return cache.get(resolvedUrl) as T
+  }
+  const response = await fetch(resolvedUrl)
   if (!response.ok) {
     const text = await response.text()
     throw new Error(text || `Request failed: ${response.status}`)
   }
   const json = (await response.json()) as T
-  cache.set(url, json)
+  cache.set(resolvedUrl, json)
   return json
 }
 
