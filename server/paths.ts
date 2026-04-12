@@ -30,7 +30,9 @@ export function resolveSkillDir(skillId: string): string {
   if (!root) {
     throw new Error('Unknown skill category')
   }
-  return path.join(root.dir, parsed.name)
+  const resolved = path.join(root.dir, parsed.name)
+  safeRelative(root.dir, resolved)
+  return resolved
 }
 
 export function safeRelative(root: string, target: string): string {

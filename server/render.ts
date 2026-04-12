@@ -7,7 +7,7 @@ const markdown = new MarkdownIt({
   highlight(code: string, lang: string) {
     const language = lang && hljs.getLanguage(lang) ? lang : 'plaintext'
     const highlighted = hljs.highlight(code, { language }).value
-    return `<pre class=\"hljs\"><code>${highlighted}</code></pre>`
+    return `<pre class="hljs"><code>${highlighted}</code></pre>`
   },
 })
 

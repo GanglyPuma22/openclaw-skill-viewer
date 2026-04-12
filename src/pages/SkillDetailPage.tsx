@@ -18,6 +18,7 @@ export function SkillDetailPage() {
   const [history, setHistory] = useState<HistoryEntry[]>([])
   const [diff, setDiff] = useState('')
   const [rawMode, setRawMode] = useState(false)
+  const [historyLoadedFor, setHistoryLoadedFor] = useState('')
 
   const loadSkill = useCallback(async (force = false) => {
     const result = await fetchSkill(skillId, force)
@@ -27,13 +28,15 @@ export function SkillDetailPage() {
   }, [skillId])
 
   const loadFile = useCallback(async (path: string, force = false) => {
-    const [fileResult, historyResult] = await Promise.all([
-      fetchFile(skillId, path, force),
-      fetchHistory(skillId, path, force),
-    ])
+    const fileResult = await fetchFile(skillId, path, force)
     setFile(fileResult)
-    setHistory(historyResult.history)
     setDiff('')
+  }, [skillId])
+
+  const loadHistory = useCallback(async (path: string, force = false) => {
+    const historyResult = await fetchHistory(skillId, path, force)
+    setHistory(historyResult.history)
+    setHistoryLoadedFor(path)
   }, [skillId])
 
   useEffect(() => {
@@ -42,14 +45,26 @@ export function SkillDetailPage() {
 
   useEffect(() => {
     if (!selectedPath) return
+    setHistory([])
+    setHistoryLoadedFor('')
     void loadFile(selectedPath)
   }, [loadFile, selectedPath])
 
-  useLiveUpdates(() => {
+  useEffect(() => {
+    if (!selectedPath) return
+    void loadHistory(selectedPath)
+  }, [loadHistory, selectedPath])
+
+  const handleLiveUpdate = useCallback(() => {
     invalidateApiCache(`/api/skills/${encodeURIComponent(skillId)}`)
     void loadSkill(true)
-    if (selectedPath) void loadFile(selectedPath, true)
-  })
+    if (selectedPath) {
+      void loadFile(selectedPath, true)
+      void loadHistory(selectedPath, true)
+    }
+  }, [loadFile, loadHistory, loadSkill, selectedPath, skillId])
+
+  useLiveUpdates(handleLiveUpdate)
 
   const statusText = useMemo(() => {
     if (!skill) return ''
@@ -75,7 +90,7 @@ export function SkillDetailPage() {
             </div>
             <div className="detail-main">
               <FileViewer file={file} rawMode={rawMode} onToggleMode={() => setRawMode((value) => !value)} />
-              <HistoryPanel history={history} diff={diff} onSelectDiff={(fromRef) => { void fetchDiff(skillId, selectedPath, fromRef).then((result) => setDiff(result.diff)) }} />
+              <HistoryPanel history={history} diff={diff} loading={!historyLoadedFor || historyLoadedFor !== selectedPath} onSelectDiff={(fromRef) => { void fetchDiff(skillId, selectedPath, fromRef).then((result) => setDiff(result.diff)) }} />
             </div>
           </section>
         </>

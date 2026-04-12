@@ -2,20 +2,8 @@ import type { FileContentResponse, FileTreeNode, HistoryEntry, SkillRecord } fro
 
 const cache = new Map<string, unknown>()
 
-function getApiBase() {
-  if (typeof window === 'undefined') return ''
-
-  const { protocol, hostname, port } = window.location
-
-  if (port === '4173' || port === '5173' || port === '4174') {
-    return ''
-  }
-
-  return `${protocol}//${hostname}:4174`
-}
-
 export function apiUrl(path: string) {
-  return `${getApiBase()}${path}`
+  return path
 }
 
 async function requestJson<T>(url: string, force = false): Promise<T> {

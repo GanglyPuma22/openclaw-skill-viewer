@@ -18,8 +18,8 @@ export function startWatcher() {
     ignoreInitial: true,
     depth: 5,
   })
-  const notify = (event: string, filePath: string) => {
-    const payload = `data: ${JSON.stringify({ event, filePath, at: new Date().toISOString() })}\n\n`
+  const notify = (event: string) => {
+    const payload = `data: ${JSON.stringify({ event, at: new Date().toISOString() })}\n\n`
     for (const client of clients) {
       client.write(payload)
     }

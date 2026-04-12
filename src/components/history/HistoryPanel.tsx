@@ -4,10 +4,11 @@ import type { HistoryEntry } from '../../types'
 interface HistoryPanelProps {
   history: HistoryEntry[]
   diff: string
+  loading?: boolean
   onSelectDiff: (fromRef: string) => void
 }
 
-export function HistoryPanel({ history, diff, onSelectDiff }: HistoryPanelProps) {
+export function HistoryPanel({ history, diff, loading = false, onSelectDiff }: HistoryPanelProps) {
   const [selected, setSelected] = useState<string>('')
   const items = useMemo(() => history.slice(0, 20), [history])
 
@@ -18,7 +19,7 @@ export function HistoryPanel({ history, diff, onSelectDiff }: HistoryPanelProps)
       </div>
       <div className="history-layout">
         <div className="history-list">
-          {items.length > 0 ? items.map((entry) => (
+          {loading ? <div className="history-empty">Loading history…</div> : items.length > 0 ? items.map((entry) => (
             <button
               key={entry.hash}
               className={`history-item ${selected === entry.hash ? 'selected' : ''}`}
@@ -32,7 +33,7 @@ export function HistoryPanel({ history, diff, onSelectDiff }: HistoryPanelProps)
             </button>
           )) : <div className="history-empty">No git history found for this file yet.</div>}
         </div>
-        <pre className="diff-view"><code>{diff || (items.length > 0 ? 'Click a commit on the left to compare it against HEAD.' : 'History unavailable for this file.')}</code></pre>
+        <pre className="diff-view"><code>{diff || (loading ? 'Loading history…' : items.length > 0 ? 'Click a commit on the left to compare it against HEAD.' : 'History unavailable for this file.')}</code></pre>
       </div>
     </section>
   )

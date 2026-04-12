@@ -1,25 +1,28 @@
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import express from 'express'
 import { API_PORT } from './config.js'
 import { getFileContent } from './files.js'
 import { getDiff, getHistory } from './history.js'
 import { getSkill, getSkills, buildTree } from './skills.js'
+import type { SkillRecord } from './types.js'
 import { registerEventsClient, startWatcher } from './watch.js'
 
 const app = express()
-app.use((req, res, next) => {
-  const origin = req.headers.origin
-  if (origin) {
-    res.setHeader('Access-Control-Allow-Origin', origin)
-    res.setHeader('Vary', 'Origin')
-  }
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
-  if (req.method === 'OPTIONS') {
-    res.sendStatus(204)
-    return
-  }
-  next()
-})
+const serverDir = path.dirname(fileURLToPath(import.meta.url))
+const distDir = [
+  path.resolve(serverDir, '../dist'),
+  path.resolve(serverDir, '../../dist'),
+].find((candidate) => fs.existsSync(path.join(candidate, 'index.html')))
+
+function toPublicSkillRecord(skill: SkillRecord) {
+  const { filePath, baseDir, ...publicSkill } = skill
+  void filePath
+  void baseDir
+  return publicSkill
+}
+
 app.use(express.json())
 startWatcher()
 
@@ -30,7 +33,7 @@ app.get('/api/health', (_req, res) => {
 app.get('/api/skills', async (_req, res, next) => {
   try {
     const skills = await getSkills()
-    res.json({ skills })
+    res.json({ skills: skills.map(toPublicSkillRecord) })
   } catch (error) {
     next(error)
   }
@@ -41,7 +44,7 @@ app.get('/api/skills/:skillId', async (req, res, next) => {
     const skill = await getSkill(req.params.skillId)
     const tree = await buildTree(skill.baseDir)
     const defaultFile = tree.flatMap((node) => node.type === 'file' ? [node.path] : (node.children ?? []).filter((child) => child.type === 'file').map((child) => child.path)).find((item) => item.endsWith('SKILL.md')) ?? 'SKILL.md'
-    res.json({ skill, tree, defaultFile })
+    res.json({ skill: toPublicSkillRecord(skill), tree, defaultFile })
   } catch (error) {
     next(error)
   }
@@ -88,11 +91,19 @@ app.get('/api/events', (_req, res) => {
   registerEventsClient(res)
 })
 
-app.use((error: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+if (distDir) {
+  app.use(express.static(distDir))
+  app.get(/^\/(?!api(?:\/|$)).*/, (_req, res) => {
+    res.sendFile(path.join(distDir, 'index.html'))
+  })
+}
+
+app.use((error: unknown, _req: express.Request, res: express.Response, next: express.NextFunction) => {
+  void next
   const message = error instanceof Error ? error.message : 'Unknown error'
   res.status(500).json({ error: message })
 })
 
-app.listen(API_PORT, '0.0.0.0', () => {
-  console.log(`Skill viewer API listening on http://127.0.0.1:${API_PORT}`)
+app.listen(API_PORT, '127.0.0.1', () => {
+  console.log(`Skill viewer listening on http://127.0.0.1:${API_PORT}`)
 })
