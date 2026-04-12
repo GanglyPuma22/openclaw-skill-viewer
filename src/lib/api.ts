@@ -32,11 +32,13 @@ export function invalidateApiCache(prefix?: string) {
 }
 
 export function fetchSkills(force = false) {
-  return requestJson<{ skills: SkillRecord[] }>('/api/skills', force)
+  const forceQuery = force ? '?force=1' : ''
+  return requestJson<{ skills: SkillRecord[] }>(`/api/skills${forceQuery}`, force)
 }
 
 export function fetchSkill(skillId: string, force = false) {
-  return requestJson<{ skill: SkillRecord; tree: FileTreeNode[]; defaultFile: string }>(`/api/skills/${encodeURIComponent(skillId)}`, force)
+  const forceQuery = force ? '?force=1' : ''
+  return requestJson<{ skill: SkillRecord; tree: FileTreeNode[]; defaultFile: string }>(`/api/skills/${encodeURIComponent(skillId)}${forceQuery}`, force)
 }
 
 export function fetchFile(skillId: string, relativePath: string, force = false) {

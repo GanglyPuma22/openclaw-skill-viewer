@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { apiUrl } from '../lib/api'
 
 type LiveUpdatePayload = {
@@ -7,6 +7,12 @@ type LiveUpdatePayload = {
 }
 
 export function useLiveUpdates(onMessage: (payload: LiveUpdatePayload) => void) {
+  const onMessageRef = useRef(onMessage)
+
+  useEffect(() => {
+    onMessageRef.current = onMessage
+  }, [onMessage])
+
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.EventSource === 'undefined') {
       return
@@ -19,7 +25,7 @@ export function useLiveUpdates(onMessage: (payload: LiveUpdatePayload) => void) 
         if (payload.event === 'connected') {
           return
         }
-        onMessage(payload)
+        onMessageRef.current(payload)
       } catch {
         // Ignore malformed event payloads.
       }
@@ -30,5 +36,5 @@ export function useLiveUpdates(onMessage: (payload: LiveUpdatePayload) => void) 
     return () => {
       source.close()
     }
-  }, [onMessage])
+  }, [])
 }

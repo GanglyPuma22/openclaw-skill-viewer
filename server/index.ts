@@ -30,9 +30,10 @@ app.get('/api/health', (_req, res) => {
   res.json({ ok: true })
 })
 
-app.get('/api/skills', async (_req, res, next) => {
+app.get('/api/skills', async (req, res, next) => {
   try {
-    const skills = await getSkills()
+    const force = req.query.force === '1'
+    const skills = await getSkills(force)
     res.json({ skills: skills.map(toPublicSkillRecord) })
   } catch (error) {
     next(error)
@@ -41,7 +42,8 @@ app.get('/api/skills', async (_req, res, next) => {
 
 app.get('/api/skills/:skillId', async (req, res, next) => {
   try {
-    const skill = await getSkill(req.params.skillId)
+    const force = req.query.force === '1'
+    const skill = await getSkill(req.params.skillId, force)
     const tree = await buildTree(skill.baseDir)
     const defaultFile = tree.flatMap((node) => node.type === 'file' ? [node.path] : (node.children ?? []).filter((child) => child.type === 'file').map((child) => child.path)).find((item) => item.endsWith('SKILL.md')) ?? 'SKILL.md'
     res.json({ skill: toPublicSkillRecord(skill), tree, defaultFile })

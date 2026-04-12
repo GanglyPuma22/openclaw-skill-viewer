@@ -20,6 +20,11 @@ let refreshPromise: Promise<SkillStatusListEntry[]> | null = null
 
 const STATUS_TTL_MS = 5 * 60 * 1000
 
+export function invalidateSkillStatusCache() {
+  cachedStatuses = null
+  cachedAt = 0
+}
+
 async function refreshSkillStatuses(): Promise<SkillStatusListEntry[]> {
   const json = await execJson('openclaw', ['skills', 'list', '--json'])
   const skills = Array.isArray(json.skills) ? json.skills : []
@@ -39,7 +44,14 @@ function refreshSkillStatusesInBackground() {
   return refreshPromise
 }
 
-async function loadSkillStatuses(): Promise<SkillStatusListEntry[]> {
+async function loadSkillStatuses(force = false): Promise<SkillStatusListEntry[]> {
+  if (force) {
+    if (refreshPromise) {
+      return refreshPromise
+    }
+    return refreshSkillStatusesInBackground()
+  }
+
   const now = Date.now()
   if (cachedStatuses && now - cachedAt < STATUS_TTL_MS) {
     return cachedStatuses
@@ -124,8 +136,8 @@ async function detectGitTracked(dir: string): Promise<boolean> {
   return false
 }
 
-export async function getSkills(): Promise<SkillRecord[]> {
-  const statuses = await loadSkillStatuses()
+export async function getSkills(force = false): Promise<SkillRecord[]> {
+  const statuses = await loadSkillStatuses(force)
   const byPath = new Map<string, SkillStatusListEntry>()
   const byName = new Map<string, SkillStatusListEntry[]>()
   for (const status of statuses) {
@@ -180,7 +192,7 @@ export async function getSkills(): Promise<SkillRecord[]> {
   return skills
 }
 
-export async function getSkill(skillId: string): Promise<SkillRecord> {
+export async function getSkill(skillId: string, force = false): Promise<SkillRecord> {
   const [category, ...rest] = skillId.split(':')
   const name = rest.join(':')
   const root = SKILL_ROOTS.find((entry) => entry.category === category)
@@ -193,7 +205,7 @@ export async function getSkill(skillId: string): Promise<SkillRecord> {
 
   await fs.access(baseDir)
 
-  const statuses = await loadSkillStatuses()
+  const statuses = await loadSkillStatuses(force)
   const exactStatus = statuses.find((entry) => path.resolve(entry.baseDir ?? '') === path.resolve(baseDir))
   const fallbackStatuses = statuses.filter((entry) => entry.name === name)
   const status = exactStatus ?? (fallbackStatuses.length === 1 ? fallbackStatuses[0] : undefined)
