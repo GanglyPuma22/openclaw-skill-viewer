@@ -69,9 +69,48 @@ async function loadSkillStatuses(force = false): Promise<SkillStatusListEntry[]>
   return refreshSkillStatusesInBackground()
 }
 
+type SkillFsEntry = {
+  root: (typeof SKILL_ROOTS)[number]
+  name: string
+  baseDir: string
+}
+
 async function listDirectories(dir: string): Promise<string[]> {
   const entries = await fs.readdir(dir, { withFileTypes: true })
   return entries.filter((entry) => entry.isDirectory() && !IGNORED_NAMES.has(entry.name)).map((entry) => entry.name)
+}
+
+async function listSkillFsEntries(): Promise<SkillFsEntry[]> {
+  const entries: SkillFsEntry[] = []
+  for (const root of SKILL_ROOTS) {
+    const names = await listDirectories(root.dir).catch(() => [])
+    for (const name of names) {
+      entries.push({
+        root,
+        name,
+        baseDir: path.join(root.dir, name),
+      })
+    }
+  }
+  return entries
+}
+
+function canonicalFallbackStatus(
+  baseDir: string,
+  rootCategory: (typeof SKILL_ROOTS)[number]['category'],
+  fallbackStatuses: SkillStatusListEntry[],
+  nameCount: number,
+): SkillStatusListEntry | undefined {
+  if (fallbackStatuses.length !== 1) return undefined
+  if (nameCount <= 1) return fallbackStatuses[0]
+
+  const [fallback] = fallbackStatuses
+  if (fallback.baseDir) {
+    return path.resolve(fallback.baseDir) === path.resolve(baseDir) ? fallback : undefined
+  }
+
+  const fallbackCategory = categoryFromSource(fallback.source)
+  return fallbackCategory === rootCategory ? fallback : undefined
 }
 
 async function statDirectoryRecursive(dir: string): Promise<{ fileCount: number; folderSize: number; modifiedAt: number }> {
@@ -147,45 +186,51 @@ export async function getSkills(force = false): Promise<SkillRecord[]> {
     byName.set(status.name, existing)
   }
 
+  const fsEntries = await listSkillFsEntries()
+  const nameCounts = new Map<string, number>()
+  for (const entry of fsEntries) {
+    nameCounts.set(entry.name, (nameCounts.get(entry.name) ?? 0) + 1)
+  }
+
   const skills: SkillRecord[] = []
-  for (const root of SKILL_ROOTS) {
-    const names = await listDirectories(root.dir).catch(() => [])
-    for (const name of names) {
-      const baseDir = path.join(root.dir, name)
-      const stats = await statDirectoryRecursive(baseDir)
-      const skillMdPath = path.join(baseDir, 'SKILL.md')
-      let description = ''
-      try {
-        const parsed = matter(await fs.readFile(skillMdPath, 'utf8'))
-        description = String(parsed.data.description ?? '').trim()
-      } catch {
-        // ignore
-      }
-      const fallbackStatuses = byName.get(name) ?? []
-      const status = byPath.get(path.resolve(baseDir)) ?? (fallbackStatuses.length === 1 ? fallbackStatuses[0] : undefined)
-      const category = status?.source ? categoryFromSource(status.source) : root.category
-      skills.push({
-        id: makeSkillId(category, name),
-        name,
-        category,
-        categoryLabel: root.label,
-        source: status?.source ?? root.category,
-        pathToken: safeRelative(root.dir, baseDir),
-        description: status?.description ?? description,
-        filePath: skillMdPath,
-        baseDir,
-        eligible: status?.eligible ?? false,
-        disabled: status?.disabled ?? false,
-        blockedByAllowlist: status?.blockedByAllowlist ?? false,
-        ready: status?.eligible ?? false,
-        fileCount: stats.fileCount,
-        folderSize: stats.folderSize,
-        modifiedAt: new Date(stats.modifiedAt || Date.now()).toISOString(),
-        gitTracked: await detectGitTracked(baseDir),
-        missing: status?.missing,
-        requirements: status?.requirements,
-      })
+  for (const entry of fsEntries) {
+    const { root, name, baseDir } = entry
+    const stats = await statDirectoryRecursive(baseDir)
+    const skillMdPath = path.join(baseDir, 'SKILL.md')
+    let description = ''
+    try {
+      const parsed = matter(await fs.readFile(skillMdPath, 'utf8'))
+      description = String(parsed.data.description ?? '').trim()
+    } catch {
+      // ignore
     }
+    const fallbackStatuses = byName.get(name) ?? []
+    const status = byPath.get(path.resolve(baseDir)) ?? canonicalFallbackStatus(baseDir, root.category, fallbackStatuses, nameCounts.get(name) ?? 0)
+    if (!status && (nameCounts.get(name) ?? 0) > 1 && fallbackStatuses.length === 1) {
+      continue
+    }
+    const category = status?.source ? categoryFromSource(status.source) : root.category
+    skills.push({
+      id: makeSkillId(category, name),
+      name,
+      category,
+      categoryLabel: root.label,
+      source: status?.source ?? root.category,
+      pathToken: safeRelative(root.dir, baseDir),
+      description: status?.description ?? description,
+      filePath: skillMdPath,
+      baseDir,
+      eligible: status?.eligible ?? false,
+      disabled: status?.disabled ?? false,
+      blockedByAllowlist: status?.blockedByAllowlist ?? false,
+      ready: status?.eligible ?? false,
+      fileCount: stats.fileCount,
+      folderSize: stats.folderSize,
+      modifiedAt: new Date(stats.modifiedAt || Date.now()).toISOString(),
+      gitTracked: await detectGitTracked(baseDir),
+      missing: status?.missing,
+      requirements: status?.requirements,
+    })
   }
 
   skills.sort((a, b) => a.name.localeCompare(b.name))
@@ -208,7 +253,9 @@ export async function getSkill(skillId: string, force = false): Promise<SkillRec
   const statuses = await loadSkillStatuses(force)
   const exactStatus = statuses.find((entry) => path.resolve(entry.baseDir ?? '') === path.resolve(baseDir))
   const fallbackStatuses = statuses.filter((entry) => entry.name === name)
-  const status = exactStatus ?? (fallbackStatuses.length === 1 ? fallbackStatuses[0] : undefined)
+  const fsEntries = await listSkillFsEntries()
+  const nameCount = fsEntries.filter((entry) => entry.name === name).length
+  const status = exactStatus ?? canonicalFallbackStatus(baseDir, root.category, fallbackStatuses, nameCount)
   const stats = await statDirectoryRecursive(baseDir)
 
   let description = ''
