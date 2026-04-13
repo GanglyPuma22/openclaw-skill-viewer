@@ -3,17 +3,27 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>OpenClaw Skill Viewer — View OpenClaw skills in more detail than the gateway dashboard</title>
-    <meta name="description" content="OpenClaw Skill Viewer is a local-first dashboard for browsing OpenClaw skills, checking readiness, and exploring skill files in more detail than the gateway dashboard." />
+    <title>OpenClaw Skill Viewer | Local dashboard to inspect OpenClaw skills and see which need setup</title>
+    <meta
+      name="description"
+      content="OpenClaw Skill Viewer is a local-first, read-only dashboard to browse built-in, workspace, and custom OpenClaw skills, inspect SKILL.md and related files, and see which OpenClaw skills are ready or still need setup."
+    />
+    <meta name="robots" content="index,follow,max-image-preview:large" />
     <link rel="canonical" href="https://ganglypuma22.github.io/openclaw-skill-viewer/" />
-    <meta property="og:title" content="OpenClaw Skill Viewer — Local-first OpenClaw skills dashboard" />
-    <meta property="og:description" content="Browse OpenClaw skills, filter by readiness, and inspect skill files in more detail than the gateway dashboard." />
+    <meta property="og:title" content="OpenClaw Skill Viewer | A cleaner way to inspect OpenClaw skills" />
+    <meta
+      property="og:description"
+      content="Browse built-in, workspace, and custom OpenClaw skills in one place, filter by readiness, and inspect SKILL.md and related files in more detail than the gateway dashboard."
+    />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://ganglypuma22.github.io/openclaw-skill-viewer/" />
     <meta property="og:image" content="https://ganglypuma22.github.io/openclaw-skill-viewer/media/skill-viewer-demo.gif" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="OpenClaw Skill Viewer — Local-first OpenClaw skills dashboard" />
-    <meta name="twitter:description" content="View OpenClaw skills in more detail than the gateway dashboard." />
+    <meta name="twitter:title" content="OpenClaw Skill Viewer | A cleaner way to inspect OpenClaw skills" />
+    <meta
+      name="twitter:description"
+      content="View OpenClaw skills in more detail than the gateway dashboard and quickly see which ones still need setup."
+    />
     <meta name="twitter:image" content="https://ganglypuma22.github.io/openclaw-skill-viewer/media/skill-viewer-demo.gif" />
     <link rel="stylesheet" href="./site.css" />
     <script type="application/ld+json">
@@ -22,11 +32,18 @@
         "@type": "SoftwareApplication",
         "name": "OpenClaw Skill Viewer",
         "applicationCategory": "DeveloperApplication",
-        "operatingSystem": "Linux, macOS, Windows (local environments)",
-        "description": "A local-first OpenClaw skills dashboard for browsing OpenClaw skills, checking readiness, and exploring skill files in more detail than the gateway dashboard.",
+        "operatingSystem": "Linux, macOS, Windows",
+        "description": "A local-first, read-only OpenClaw skills dashboard for browsing built-in, workspace, and custom skills, checking readiness, and inspecting skill files in more detail than the gateway dashboard.",
         "url": "https://ganglypuma22.github.io/openclaw-skill-viewer/",
         "codeRepository": "https://github.com/GanglyPuma22/openclaw-skill-viewer",
         "softwareVersion": "0.1.0",
+        "featureList": [
+          "Browse built-in, workspace, and custom OpenClaw skills together",
+          "Filter by Ready only, Not ready only, or All skills",
+          "Inspect SKILL.md and related files",
+          "Use configurable skill roots for non-default setups",
+          "Run locally as a read-only inspection tool"
+        ],
         "license": "https://github.com/GanglyPuma22/openclaw-skill-viewer/blob/main/LICENSE"
       }
     </script>
@@ -37,18 +54,34 @@
         "mainEntity": [
           {
             "@type": "Question",
-            "name": "What tool can I use to view OpenClaw skills in more detail than the gateway dashboard?",
+            "name": "What tool can I use to inspect OpenClaw skills in more detail than the gateway dashboard?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "OpenClaw Skill Viewer is a local-first dashboard for browsing OpenClaw skills, filtering by readiness, and inspecting skill files and SKILL.md contents in more detail than the default gateway dashboard."
+              "text": "OpenClaw Skill Viewer is a local-first dashboard for browsing built-in, workspace, and custom OpenClaw skills, filtering by readiness, and inspecting SKILL.md and related files in more detail than the gateway dashboard."
             }
           },
           {
             "@type": "Question",
-            "name": "Can it show bundled, workspace, and custom OpenClaw skills together?",
+            "name": "How do I see which OpenClaw skills still need setup?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Yes. OpenClaw Skill Viewer is designed to browse built-in, workspace, and custom skill roots in one dashboard, with configurable root paths for non-default setups."
+              "text": "OpenClaw Skill Viewer includes readiness filters so you can quickly switch between Ready only, Not ready only, and All skills, making it easier to see which OpenClaw skills still need setup."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can it show built-in, workspace, and custom OpenClaw skills together?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. OpenClaw Skill Viewer is designed to browse built-in, workspace, and custom skill roots in one local dashboard, including configurable roots for non-default setups."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Does OpenClaw Skill Viewer edit skills or upload them anywhere?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. OpenClaw Skill Viewer is intentionally a local, read-only viewer. It is meant for inspection and discovery, not remote hosting or skill editing."
             }
           }
         ]
@@ -56,60 +89,139 @@
     </script>
   </head>
   <body>
-    <main class="page">
-      <section class="hero card">
-        <p class="eyebrow">OpenClaw tool</p>
-        <h1>View OpenClaw skills in more detail than the gateway dashboard</h1>
-        <p class="lede">
-          OpenClaw Skill Viewer is a <strong>local-first OpenClaw skills dashboard</strong> for browsing built-in,
-          workspace, and custom skills, filtering by readiness, and inspecting the files behind each skill.
-        </p>
-        <div class="cta-row">
-          <a class="button primary" href="https://github.com/GanglyPuma22/openclaw-skill-viewer">View repo</a>
-          <a class="button" href="https://github.com/GanglyPuma22/openclaw-skill-viewer/releases/tag/v0.1.0">Release v0.1.0</a>
+    <a class="skip-link" href="#content">Skip to content</a>
+
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="https://ganglypuma22.github.io/openclaw-skill-viewer/">OpenClaw Skill Viewer</a>
+        <nav class="topnav" aria-label="Primary">
+          <a href="https://github.com/GanglyPuma22/openclaw-skill-viewer">GitHub</a>
+          <a href="https://github.com/GanglyPuma22/openclaw-skill-viewer/releases/tag/v0.1.0">Release</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="content" class="page">
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="kicker">OpenClaw tool · local-first · read-only</p>
+          <h1>A cleaner way to inspect OpenClaw skills</h1>
+          <p class="lede">
+            <strong>OpenClaw Skill Viewer</strong> is a local OpenClaw skills dashboard for people who want to browse
+            built-in, workspace, and custom skills in one place, see which OpenClaw skills are ready or not ready,
+            and inspect <code>SKILL.md</code> and related files without digging through directories.
+          </p>
+          <div class="pill-row" aria-label="Highlights">
+            <span class="pill">Built-in + workspace + custom roots</span>
+            <span class="pill">Ready / not ready filters</span>
+            <span class="pill">Read-only inspection tool</span>
+            <span class="pill">Configurable for non-default setups</span>
+          </div>
+          <div class="cta-row">
+            <a class="button primary" href="https://github.com/GanglyPuma22/openclaw-skill-viewer">View repo</a>
+            <a class="button" href="https://github.com/GanglyPuma22/openclaw-skill-viewer/releases/tag/v0.1.0">Release v0.1.0</a>
+          </div>
+          <p class="hero-note">
+            Useful when the question is not "how do I install a skill?" but "what OpenClaw skills do I actually have
+            here, what is inside them, and which ones still need setup?"
+          </p>
         </div>
+
+        <aside class="hero-panel" aria-label="Use cases">
+          <p class="panel-label">Good fit when…</p>
+          <ul class="check-list">
+            <li>You have more than one skill root</li>
+            <li>You want to see which OpenClaw skills need setup</li>
+            <li>You need to inspect <code>SKILL.md</code> and nearby files quickly</li>
+            <li>You want a local viewer instead of a hosted tool</li>
+          </ul>
+        </aside>
       </section>
 
-      <section class="media card">
+      <section class="media-shell surface">
+        <div class="section-head compact">
+          <div>
+            <p class="section-label">Product walk-through</p>
+            <h2>See the actual viewer, not a mockup</h2>
+          </div>
+        </div>
         <video controls autoplay muted loop playsinline poster="./media/skill-viewer-demo.gif">
           <source src="./media/Skill-viewer-demo.mp4" type="video/mp4" />
           Your browser does not support embedded video.
         </video>
-      </section>
-
-      <section class="card">
-        <h2>Why this exists</h2>
-        <p>
-          OpenClaw skills often live across several local roots, and the default gateway dashboard is not really built
-          for deep skill inspection. If you want to <strong>view your OpenClaw skills in a dashboard</strong>, see which ones are
-          ready, and click into their actual files, this tool is aimed directly at that workflow.
+        <p class="supporting-copy">
+          The demo shows the core workflow: browse skills across roots, filter by readiness, open a skill, and inspect
+          the files behind it.
         </p>
       </section>
 
-      <section class="grid two-up">
-        <article class="card">
-          <h2>What it does</h2>
-          <ul>
-            <li>Browse built-in, workspace, and custom OpenClaw skills</li>
-            <li>Filter by <strong>Ready only</strong>, <strong>Not ready only</strong>, or <strong>All skills</strong></li>
-            <li>Inspect a skill’s file tree and <code>SKILL.md</code></li>
-            <li>Refresh automatically as local skill files change</li>
-            <li>Work with configurable skill roots for non-default setups</li>
+      <section class="split section-block">
+        <div>
+          <p class="section-label">Why this exists</p>
+          <h2>The gateway dashboard is useful, but it is not really a skill inspection tool</h2>
+          <p>
+            OpenClaw Skill Viewer exists for the moment when you are trying to answer practical questions about your
+            local setup: which skills are present, which ones are ready, which ones are missing setup, and what is
+            actually inside a given skill directory.
+          </p>
+          <p>
+            Instead of manually bouncing between the gateway dashboard, your terminal, and a file browser,
+            <strong>OpenClaw Skill Viewer</strong> pulls that inspection workflow into one local dashboard.
+          </p>
+        </div>
+        <div class="surface inset-panel">
+          <p class="panel-label">Common search-style questions</p>
+          <ul class="plain-list">
+            <li>What tool can I use to inspect OpenClaw skills in more detail?</li>
+            <li>How do I see which OpenClaw skills still need setup?</li>
+            <li>Can I browse built-in and custom OpenClaw skills together?</li>
+            <li>How do I read <code>SKILL.md</code> without manually digging through folders?</li>
           </ul>
-        </article>
-
-        <article class="card">
-          <h2>Who it is for</h2>
-          <ul>
-            <li>OpenClaw users who want a better skill inspection workflow</li>
-            <li>People trying to figure out which skills still need setup</li>
-            <li>Developers who want a cleaner local dashboard than manually browsing directories</li>
-          </ul>
-        </article>
+        </div>
       </section>
 
-      <section class="card">
-        <h2>OpenClaw Skill Viewer vs gateway dashboard</h2>
+      <section class="section-block">
+        <div class="section-head">
+          <div>
+            <p class="section-label">What you can inspect</p>
+            <h2>Three things it makes much easier</h2>
+          </div>
+        </div>
+
+        <div class="feature-grid">
+          <article class="feature">
+            <h3>Readiness at a glance</h3>
+            <p>
+              Switch between <strong>Ready only</strong>, <strong>Not ready only</strong>, and <strong>All skills</strong>
+              to see which OpenClaw skills are usable now and which ones still need setup.
+            </p>
+          </article>
+
+          <article class="feature">
+            <h3>Real skill contents</h3>
+            <p>
+              Open a skill and inspect <code>SKILL.md</code>, nearby files, and the folder structure without leaving the
+              viewer or guessing which directory to inspect next.
+            </p>
+          </article>
+
+          <article class="feature">
+            <h3>Multiple roots in one place</h3>
+            <p>
+              Browse built-in, workspace, and custom OpenClaw skill roots together. If your setup is non-default, you
+              can point the viewer at custom paths.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="surface compare-block">
+        <div class="section-head compact">
+          <div>
+            <p class="section-label">Comparison</p>
+            <h2>OpenClaw Skill Viewer vs gateway dashboard</h2>
+          </div>
+        </div>
         <div class="table-shell">
           <table>
             <thead>
@@ -121,28 +233,28 @@
             </thead>
             <tbody>
               <tr>
-                <td>See skill readiness clearly</td>
+                <td>See which skills are ready or not ready</td>
                 <td>Partial</td>
-                <td>Yes</td>
+                <td>Clear filters</td>
               </tr>
               <tr>
                 <td>Browse skill files and folders</td>
-                <td>Weak / not the focus</td>
+                <td>Not the main focus</td>
                 <td>Yes</td>
               </tr>
               <tr>
-                <td>Inspect <code>SKILL.md</code> contents quickly</td>
+                <td>Inspect <code>SKILL.md</code> quickly</td>
                 <td>Limited</td>
                 <td>Yes</td>
               </tr>
               <tr>
-                <td>See bundled + workspace + custom roots together</td>
+                <td>See built-in, workspace, and custom roots together</td>
                 <td>Limited</td>
                 <td>Yes</td>
               </tr>
               <tr>
-                <td>Use a local-first dashboard focused on skill exploration</td>
-                <td>Not the main goal</td>
+                <td>Use a local, read-only dashboard focused on skill discovery</td>
+                <td>No</td>
                 <td>Yes</td>
               </tr>
             </tbody>
@@ -150,39 +262,88 @@
         </div>
       </section>
 
-      <section class="grid two-up">
-        <article class="card">
-          <h2>Quick start</h2>
+      <section class="dual-panel">
+        <article class="surface">
+          <p class="section-label">Quick start</p>
+          <h2>Run it locally</h2>
           <pre><code>git clone https://github.com/GanglyPuma22/openclaw-skill-viewer.git
 cd openclaw-skill-viewer
 npm install
 npm run build
 npm run start</code></pre>
-          <p>Then open <code>http://127.0.0.1:4174</code>.</p>
+          <p class="supporting-copy">Then open <code>http://127.0.0.1:4174</code>.</p>
         </article>
 
-        <article class="card">
-          <h2>Configuration</h2>
-          <p>You can override skill roots with environment variables:</p>
+        <article class="surface">
+          <p class="section-label">Configuration</p>
+          <h2>Works with non-default skill roots</h2>
+          <p>
+            If your OpenClaw setup does not use the default locations, override the roots with environment variables:
+          </p>
           <pre><code>OPENCLAW_SKILL_VIEWER_BUILTIN_ROOT
 OPENCLAW_SKILL_VIEWER_WORKSPACE_ROOT
 OPENCLAW_SKILL_VIEWER_OTHER_ROOT</code></pre>
         </article>
       </section>
 
-      <section class="card faq">
-        <h2>FAQ</h2>
-        <h3>What tool can I use to view OpenClaw skills in more detail than the gateway dashboard?</h3>
-        <p>
-          <strong>OpenClaw Skill Viewer</strong> is built for exactly that use case: browsing skills, filtering by readiness,
-          and opening the files behind each skill in a cleaner local dashboard.
-        </p>
+      <section class="split section-block">
+        <div>
+          <p class="section-label">What it is not</p>
+          <h2>Intentionally narrow scope</h2>
+          <p>
+            This is not a hosted platform, skill marketplace, or skill editor. OpenClaw Skill Viewer is meant to be a
+            focused, local inspection tool for people who want better visibility into their OpenClaw skills.
+          </p>
+        </div>
+        <div class="surface inset-panel">
+          <p class="panel-label">In plain English</p>
+          <ul class="plain-list">
+            <li>Local-first</li>
+            <li>Read-only</li>
+            <li>Built for inspection and discovery</li>
+            <li>Useful when the gateway dashboard is not detailed enough</li>
+          </ul>
+        </div>
+      </section>
 
-        <h3>Can it show bundled, workspace, and custom skills together?</h3>
-        <p>Yes. That is one of the main reasons it exists.</p>
+      <section class="faq-block surface">
+        <div class="section-head compact">
+          <div>
+            <p class="section-label">FAQ</p>
+            <h2>Questions this page should answer clearly</h2>
+          </div>
+        </div>
 
-        <h3>Does it edit skills?</h3>
-        <p>No. It is intentionally a viewer, not a skill management platform.</p>
+        <div class="faq-item">
+          <h3>What tool can I use to inspect OpenClaw skills in more detail than the gateway dashboard?</h3>
+          <p>
+            <strong>OpenClaw Skill Viewer</strong> is built for that exact use case. It lets you browse local OpenClaw
+            skills, filter by readiness, and inspect <code>SKILL.md</code> and related files in one place.
+          </p>
+        </div>
+
+        <div class="faq-item">
+          <h3>How do I see which OpenClaw skills still need setup?</h3>
+          <p>
+            Use the readiness filters. The viewer supports <strong>Ready only</strong>, <strong>Not ready only</strong>, and
+            <strong>All skills</strong>, so it is easy to focus on the skills that are not ready yet.
+          </p>
+        </div>
+
+        <div class="faq-item">
+          <h3>Can it show built-in, workspace, and custom OpenClaw skills together?</h3>
+          <p>
+            Yes. Supporting multiple skill roots in one dashboard is one of the main reasons this tool exists.
+          </p>
+        </div>
+
+        <div class="faq-item">
+          <h3>Does it edit skills or upload them anywhere?</h3>
+          <p>
+            No. OpenClaw Skill Viewer is intentionally a local, read-only viewer. It is for inspection and discovery,
+            not editing or hosting.
+          </p>
+        </div>
       </section>
     </main>
   </body>
