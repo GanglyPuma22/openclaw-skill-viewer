@@ -6,8 +6,6 @@ export interface SkillRecord {
   source: string
   pathToken: string
   description: string
-  filePath: string
-  baseDir: string
   eligible: boolean
   disabled: boolean
   blockedByAllowlist: boolean

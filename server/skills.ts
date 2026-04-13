@@ -1,9 +1,8 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import matter from 'gray-matter'
-import { simpleGit } from 'simple-git'
 import { IGNORED_NAMES, SKILL_ROOTS } from './config.js'
-import { categoryFromSource, makeSkillId, safeRelative } from './paths.js'
+import { categoryFromSource, makeSkillId, resolveSkillDir, safeRelative } from './paths.js'
 import { execJson } from './process-utils.js'
 import type { FileTreeNode, SkillRecord, SkillStatusInfo } from './types.js'
 
@@ -17,15 +16,57 @@ type SkillStatusListEntry = SkillStatusInfo & {
 
 let cachedStatuses: SkillStatusListEntry[] | null = null
 let cachedAt = 0
+let refreshPromise: Promise<SkillStatusListEntry[]> | null = null
 
-async function loadSkillStatuses(): Promise<SkillStatusListEntry[]> {
-  const now = Date.now()
-  if (cachedStatuses && now - cachedAt < 10_000) return cachedStatuses
+const STATUS_TTL_MS = 5 * 60 * 1000
+
+export function invalidateSkillStatusCache() {
+  cachedStatuses = null
+  cachedAt = 0
+}
+
+async function refreshSkillStatuses(): Promise<SkillStatusListEntry[]> {
   const json = await execJson('openclaw', ['skills', 'list', '--json'])
   const skills = Array.isArray(json.skills) ? json.skills : []
   cachedStatuses = skills
-  cachedAt = now
+  cachedAt = Date.now()
   return skills
+}
+
+function refreshSkillStatusesInBackground() {
+  if (!refreshPromise) {
+    refreshPromise = refreshSkillStatuses()
+      .catch(() => cachedStatuses ?? [])
+      .finally(() => {
+        refreshPromise = null
+      })
+  }
+  return refreshPromise
+}
+
+async function loadSkillStatuses(force = false): Promise<SkillStatusListEntry[]> {
+  if (force) {
+    if (refreshPromise) {
+      return refreshPromise
+    }
+    return refreshSkillStatusesInBackground()
+  }
+
+  const now = Date.now()
+  if (cachedStatuses && now - cachedAt < STATUS_TTL_MS) {
+    return cachedStatuses
+  }
+
+  if (cachedStatuses) {
+    void refreshSkillStatusesInBackground()
+    return cachedStatuses
+  }
+
+  if (refreshPromise) {
+    return refreshPromise
+  }
+
+  return refreshSkillStatusesInBackground()
 }
 
 async function listDirectories(dir: string): Promise<string[]> {
@@ -56,23 +97,54 @@ async function statDirectoryRecursive(dir: string): Promise<{ fileCount: number;
   return { fileCount, folderSize, modifiedAt }
 }
 
-async function detectGitTracked(dir: string): Promise<boolean> {
+const gitTrackedCache = new Map<string, boolean>()
+
+async function pathExists(target: string): Promise<boolean> {
   try {
-    const git = simpleGit({ baseDir: dir, binary: 'git' })
-    await git.revparse(['--show-toplevel'])
+    await fs.access(target)
     return true
   } catch {
     return false
   }
 }
 
-export async function getSkills(): Promise<SkillRecord[]> {
-  const statuses = await loadSkillStatuses()
+async function detectGitTracked(dir: string): Promise<boolean> {
+  const resolved = path.resolve(dir)
+  if (gitTrackedCache.has(resolved)) return gitTrackedCache.get(resolved) ?? false
+
+  let current = resolved
+  while (true) {
+    if (gitTrackedCache.has(current)) {
+      const cached = gitTrackedCache.get(current) ?? false
+      gitTrackedCache.set(resolved, cached)
+      return cached
+    }
+
+    const hasGit = await pathExists(path.join(current, '.git'))
+    if (hasGit) {
+      gitTrackedCache.set(current, true)
+      gitTrackedCache.set(resolved, true)
+      return true
+    }
+
+    const parent = path.dirname(current)
+    if (parent === current) break
+    current = parent
+  }
+
+  gitTrackedCache.set(resolved, false)
+  return false
+}
+
+export async function getSkills(force = false): Promise<SkillRecord[]> {
+  const statuses = await loadSkillStatuses(force)
   const byPath = new Map<string, SkillStatusListEntry>()
-  const byName = new Map<string, SkillStatusListEntry>()
+  const byName = new Map<string, SkillStatusListEntry[]>()
   for (const status of statuses) {
     if (status.baseDir) byPath.set(path.resolve(status.baseDir), status)
-    byName.set(status.name, status)
+    const existing = byName.get(status.name) ?? []
+    existing.push(status)
+    byName.set(status.name, existing)
   }
 
   const skills: SkillRecord[] = []
@@ -89,7 +161,8 @@ export async function getSkills(): Promise<SkillRecord[]> {
       } catch {
         // ignore
       }
-      const status = byPath.get(path.resolve(baseDir)) ?? byName.get(name)
+      const fallbackStatuses = byName.get(name) ?? []
+      const status = byPath.get(path.resolve(baseDir)) ?? (fallbackStatuses.length === 1 ? fallbackStatuses[0] : undefined)
       const category = status?.source ? categoryFromSource(status.source) : root.category
       skills.push({
         id: makeSkillId(category, name),
@@ -119,11 +192,56 @@ export async function getSkills(): Promise<SkillRecord[]> {
   return skills
 }
 
-export async function getSkill(skillId: string): Promise<SkillRecord> {
-  const skills = await getSkills()
-  const skill = skills.find((entry) => entry.id === skillId)
-  if (!skill) throw new Error('Skill not found')
-  return skill
+export async function getSkill(skillId: string, force = false): Promise<SkillRecord> {
+  const [category, ...rest] = skillId.split(':')
+  const name = rest.join(':')
+  const root = SKILL_ROOTS.find((entry) => entry.category === category)
+  if (!root || !name) {
+    throw new Error('Skill not found')
+  }
+
+  const baseDir = resolveSkillDir(skillId)
+  const skillMdPath = path.join(baseDir, 'SKILL.md')
+
+  await fs.access(baseDir)
+
+  const statuses = await loadSkillStatuses(force)
+  const exactStatus = statuses.find((entry) => path.resolve(entry.baseDir ?? '') === path.resolve(baseDir))
+  const fallbackStatuses = statuses.filter((entry) => entry.name === name)
+  const status = exactStatus ?? (fallbackStatuses.length === 1 ? fallbackStatuses[0] : undefined)
+  const stats = await statDirectoryRecursive(baseDir)
+
+  let description = ''
+  try {
+    const parsed = matter(await fs.readFile(skillMdPath, 'utf8'))
+    description = String(parsed.data.description ?? '').trim()
+  } catch {
+    // ignore
+  }
+
+  const categoryResolved = status?.source ? categoryFromSource(status.source) : root.category
+
+  return {
+    id: makeSkillId(categoryResolved, name),
+    name,
+    category: categoryResolved,
+    categoryLabel: root.label,
+    source: status?.source ?? root.category,
+    pathToken: safeRelative(root.dir, baseDir),
+    description: status?.description ?? description,
+    filePath: skillMdPath,
+    baseDir,
+    eligible: status?.eligible ?? false,
+    disabled: status?.disabled ?? false,
+    blockedByAllowlist: status?.blockedByAllowlist ?? false,
+    ready: status?.eligible ?? false,
+    fileCount: stats.fileCount,
+    folderSize: stats.folderSize,
+    modifiedAt: new Date(stats.modifiedAt || Date.now()).toISOString(),
+    gitTracked: await detectGitTracked(baseDir),
+    missing: status?.missing,
+    requirements: status?.requirements,
+  }
 }
 
 export async function buildTree(dir: string, root = dir): Promise<FileTreeNode[]> {

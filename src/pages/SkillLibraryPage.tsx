@@ -28,10 +28,12 @@ export function SkillLibraryPage() {
     void loadSkills()
   }, [loadSkills])
 
-  useLiveUpdates(() => {
+  const handleLiveUpdate = useCallback(() => {
     invalidateApiCache('/api/skills')
     void loadSkills(true)
-  })
+  }, [loadSkills])
+
+  useLiveUpdates(handleLiveUpdate)
 
   const filtered = useMemo(() => {
     return skills.filter((skill) => {

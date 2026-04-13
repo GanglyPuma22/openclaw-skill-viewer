@@ -2,20 +2,8 @@ import type { FileContentResponse, FileTreeNode, HistoryEntry, SkillRecord } fro
 
 const cache = new Map<string, unknown>()
 
-function getApiBase() {
-  if (typeof window === 'undefined') return ''
-
-  const { protocol, hostname, port } = window.location
-
-  if (port === '4173' || port === '5173' || port === '4174') {
-    return ''
-  }
-
-  return `${protocol}//${hostname}:4174`
-}
-
 export function apiUrl(path: string) {
-  return `${getApiBase()}${path}`
+  return path
 }
 
 async function requestJson<T>(url: string, force = false): Promise<T> {
@@ -44,11 +32,13 @@ export function invalidateApiCache(prefix?: string) {
 }
 
 export function fetchSkills(force = false) {
-  return requestJson<{ skills: SkillRecord[] }>('/api/skills', force)
+  const forceQuery = force ? '?force=1' : ''
+  return requestJson<{ skills: SkillRecord[] }>(`/api/skills${forceQuery}`, force)
 }
 
 export function fetchSkill(skillId: string, force = false) {
-  return requestJson<{ skill: SkillRecord; tree: FileTreeNode[]; defaultFile: string }>(`/api/skills/${encodeURIComponent(skillId)}`, force)
+  const forceQuery = force ? '?force=1' : ''
+  return requestJson<{ skill: SkillRecord; tree: FileTreeNode[]; defaultFile: string }>(`/api/skills/${encodeURIComponent(skillId)}${forceQuery}`, force)
 }
 
 export function fetchFile(skillId: string, relativePath: string, force = false) {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { FileTree } from '../components/FileTree'
 import { FileViewer } from '../components/FileViewer'
@@ -18,6 +18,14 @@ export function SkillDetailPage() {
   const [history, setHistory] = useState<HistoryEntry[]>([])
   const [diff, setDiff] = useState('')
   const [rawMode, setRawMode] = useState(false)
+  const [historyLoadedFor, setHistoryLoadedFor] = useState('')
+  const selectedPathRef = useRef(selectedPath)
+  const fileRequestIdRef = useRef(0)
+  const historyRequestIdRef = useRef(0)
+
+  useEffect(() => {
+    selectedPathRef.current = selectedPath
+  }, [selectedPath])
 
   const loadSkill = useCallback(async (force = false) => {
     const result = await fetchSkill(skillId, force)
@@ -27,13 +35,23 @@ export function SkillDetailPage() {
   }, [skillId])
 
   const loadFile = useCallback(async (path: string, force = false) => {
-    const [fileResult, historyResult] = await Promise.all([
-      fetchFile(skillId, path, force),
-      fetchHistory(skillId, path, force),
-    ])
+    const requestId = ++fileRequestIdRef.current
+    const fileResult = await fetchFile(skillId, path, force)
+    if (requestId !== fileRequestIdRef.current || selectedPathRef.current !== path) {
+      return
+    }
     setFile(fileResult)
-    setHistory(historyResult.history)
     setDiff('')
+  }, [skillId])
+
+  const loadHistory = useCallback(async (path: string, force = false) => {
+    const requestId = ++historyRequestIdRef.current
+    const historyResult = await fetchHistory(skillId, path, force)
+    if (requestId !== historyRequestIdRef.current || selectedPathRef.current !== path) {
+      return
+    }
+    setHistory(historyResult.history)
+    setHistoryLoadedFor(path)
   }, [skillId])
 
   useEffect(() => {
@@ -42,14 +60,27 @@ export function SkillDetailPage() {
 
   useEffect(() => {
     if (!selectedPath) return
+    setHistory([])
+    setHistoryLoadedFor('')
     void loadFile(selectedPath)
   }, [loadFile, selectedPath])
 
-  useLiveUpdates(() => {
+  useEffect(() => {
+    if (!selectedPath) return
+    void loadHistory(selectedPath)
+  }, [loadHistory, selectedPath])
+
+  const handleLiveUpdate = useCallback(() => {
+    const currentPath = selectedPathRef.current
     invalidateApiCache(`/api/skills/${encodeURIComponent(skillId)}`)
     void loadSkill(true)
-    if (selectedPath) void loadFile(selectedPath, true)
-  })
+    if (currentPath) {
+      void loadFile(currentPath, true)
+      void loadHistory(currentPath, true)
+    }
+  }, [loadFile, loadHistory, loadSkill, skillId])
+
+  useLiveUpdates(handleLiveUpdate)
 
   const statusText = useMemo(() => {
     if (!skill) return ''
@@ -75,7 +106,7 @@ export function SkillDetailPage() {
             </div>
             <div className="detail-main">
               <FileViewer file={file} rawMode={rawMode} onToggleMode={() => setRawMode((value) => !value)} />
-              <HistoryPanel history={history} diff={diff} onSelectDiff={(fromRef) => { void fetchDiff(skillId, selectedPath, fromRef).then((result) => setDiff(result.diff)) }} />
+              <HistoryPanel history={history} diff={diff} loading={!historyLoadedFor || historyLoadedFor !== selectedPath} onSelectDiff={(fromRef) => { void fetchDiff(skillId, selectedPath, fromRef).then((result) => setDiff(result.diff)) }} />
             </div>
           </section>
         </>

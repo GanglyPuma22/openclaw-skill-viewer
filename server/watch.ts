@@ -1,5 +1,6 @@
 import chokidar from 'chokidar'
 import { SKILL_ROOTS } from './config.js'
+import { invalidateSkillStatusCache } from './skills.js'
 
 const clients = new Set<import('express').Response>()
 let watcherStarted = false
@@ -18,8 +19,9 @@ export function startWatcher() {
     ignoreInitial: true,
     depth: 5,
   })
-  const notify = (event: string, filePath: string) => {
-    const payload = `data: ${JSON.stringify({ event, filePath, at: new Date().toISOString() })}\n\n`
+  const notify = (event: string) => {
+    invalidateSkillStatusCache()
+    const payload = `data: ${JSON.stringify({ event, at: new Date().toISOString() })}\n\n`
     for (const client of clients) {
       client.write(payload)
     }

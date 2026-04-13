@@ -1,15 +1,34 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { apiUrl } from '../lib/api'
 
-export function useLiveUpdates(onMessage: () => void) {
+type LiveUpdatePayload = {
+  event?: string
+  at?: string
+}
+
+export function useLiveUpdates(onMessage: (payload: LiveUpdatePayload) => void) {
+  const onMessageRef = useRef(onMessage)
+
+  useEffect(() => {
+    onMessageRef.current = onMessage
+  }, [onMessage])
+
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.EventSource === 'undefined') {
       return
     }
 
     const source = new EventSource(apiUrl('/api/events'))
-    source.onmessage = () => {
-      onMessage()
+    source.onmessage = (event) => {
+      try {
+        const payload = JSON.parse(event.data) as LiveUpdatePayload
+        if (payload.event === 'connected') {
+          return
+        }
+        onMessageRef.current(payload)
+      } catch {
+        // Ignore malformed event payloads.
+      }
     }
     source.onerror = () => {
       // Non-fatal: live updates are optional.
@@ -17,5 +36,5 @@ export function useLiveUpdates(onMessage: () => void) {
     return () => {
       source.close()
     }
-  }, [onMessage])
+  }, [])
 }
