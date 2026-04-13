@@ -6,21 +6,36 @@ export const CLIENT_PORT = 4173
 
 const home = os.homedir()
 
+function expandHome(input: string) {
+  if (input === '~') return home
+  if (input.startsWith('~/')) return path.join(home, input.slice(2))
+  return input
+}
+
+function envPath(name: string, fallback: string) {
+  const value = process.env[name]?.trim()
+  return expandHome(value || fallback)
+}
+
+const defaultBuiltInRoot = path.join(home, '.nvm/versions/node', process.version, 'lib/node_modules/openclaw/skills')
+const defaultWorkspaceRoot = path.join(home, '.openclaw/workspace/skills')
+const defaultOtherRoot = path.join(home, '.agents/skills')
+
 export const SKILL_ROOTS = [
   {
     category: 'built-in' as const,
     label: 'Built-in skills',
-    dir: path.join(home, '.nvm/versions/node/v24.11.1/lib/node_modules/openclaw/skills'),
+    dir: envPath('OPENCLAW_SKILL_VIEWER_BUILTIN_ROOT', defaultBuiltInRoot),
   },
   {
     category: 'workspace' as const,
     label: 'Workspace skills',
-    dir: path.join(home, '.openclaw/workspace/skills'),
+    dir: envPath('OPENCLAW_SKILL_VIEWER_WORKSPACE_ROOT', defaultWorkspaceRoot),
   },
   {
     category: 'other' as const,
     label: 'Other skills',
-    dir: path.join(home, '.agents/skills'),
+    dir: envPath('OPENCLAW_SKILL_VIEWER_OTHER_ROOT', defaultOtherRoot),
   },
 ]
 

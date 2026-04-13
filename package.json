@@ -2,7 +2,25 @@
   "name": "openclaw-skill-viewer",
   "private": true,
   "version": "0.1.0",
+  "description": "Local-first web UI for browsing OpenClaw skills, checking readiness, and inspecting skill contents.",
+  "license": "MIT",
   "type": "module",
+  "homepage": "https://github.com/GanglyPuma22/openclaw-skill-viewer",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GanglyPuma22/openclaw-skill-viewer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/GanglyPuma22/openclaw-skill-viewer/issues"
+  },
+  "keywords": [
+    "openclaw",
+    "skills",
+    "react",
+    "express",
+    "local-first",
+    "developer-tools"
+  ],
   "scripts": {
     "dev": "concurrently -k \"npm:dev:server\" \"npm:dev:client\"",
     "dev:client": "vite",
