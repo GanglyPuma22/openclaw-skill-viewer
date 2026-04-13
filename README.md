@@ -4,6 +4,8 @@ A **local-first OpenClaw skills dashboard** for browsing OpenClaw skills, checki
 
 If you want a way to **view your OpenClaw skills in a dashboard**, see which skills are ready, and click into the underlying files, this repo is built for exactly that workflow.
 
+[Live landing page](https://ganglypuma22.github.io/openclaw-skill-viewer/) · [GitHub repo](https://github.com/GanglyPuma22/openclaw-skill-viewer) · [Release v0.1.0](https://github.com/GanglyPuma22/openclaw-skill-viewer/releases/tag/v0.1.0)
+
 ![OpenClaw Skill Viewer demo](docs/media/skill-viewer-demo.gif)
 
 ## Why this exists

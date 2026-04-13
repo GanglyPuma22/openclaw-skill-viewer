@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://ganglypuma22.github.io/openclaw-skill-viewer/sitemap.xml

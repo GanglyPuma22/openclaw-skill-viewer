@@ -10,6 +10,10 @@ tmp
 .cache
 *.log
 
+# local media work files
+docs/media/hiDef.mp4
+docs/media/output.mp4
+
 # editor
 .vscode/*
 !.vscode/extensions.json
