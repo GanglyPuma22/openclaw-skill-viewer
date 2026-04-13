@@ -9,6 +9,7 @@ export function SkillLibraryPage() {
   const [skills, setSkills] = useState<SkillRecord[]>([])
   const [query, setQuery] = useState('')
   const [readyOnly, setReadyOnly] = useState(true)
+  const [notReadyOnly, setNotReadyOnly] = useState(false)
   const [error, setError] = useState('')
 
   const loadSkills = useCallback(async (force = false) => {
@@ -38,10 +39,14 @@ export function SkillLibraryPage() {
   const filtered = useMemo(() => {
     return skills.filter((skill) => {
       const matchesQuery = query.trim().length === 0 || `${skill.name} ${skill.description}`.toLowerCase().includes(query.toLowerCase())
-      const matchesReady = readyOnly ? skill.ready : true
-      return matchesQuery && matchesReady
+      const matchesReadiness = readyOnly && !notReadyOnly
+        ? skill.ready
+        : notReadyOnly && !readyOnly
+          ? !skill.ready
+          : true
+      return matchesQuery && matchesReadiness
     })
-  }, [query, readyOnly, skills])
+  }, [notReadyOnly, query, readyOnly, skills])
 
   return (
     <div className="page-shell">
@@ -54,7 +59,30 @@ export function SkillLibraryPage() {
           placeholder="Search skills by name or description"
         />
         <div className="toggle-row">
-          <label><input type="checkbox" checked={readyOnly} onChange={(event) => setReadyOnly(event.target.checked)} /> Ready only</label>
+          <label>
+            <input
+              type="checkbox"
+              checked={readyOnly}
+              onChange={(event) => {
+                const checked = event.target.checked
+                setReadyOnly(checked)
+                if (checked) setNotReadyOnly(false)
+              }}
+            />{' '}
+            Ready only
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={notReadyOnly}
+              onChange={(event) => {
+                const checked = event.target.checked
+                setNotReadyOnly(checked)
+                if (checked) setReadyOnly(false)
+              }}
+            />{' '}
+            Not ready only
+          </label>
         </div>
       </section>
       <section className="panel">

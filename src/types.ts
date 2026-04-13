@@ -42,10 +42,3 @@ export interface FileContentResponse {
   modifiedAt: string
 }
 
-export interface HistoryEntry {
-  hash: string
-  shortHash: string
-  date: string
-  authorName: string
-  subject: string
-}
