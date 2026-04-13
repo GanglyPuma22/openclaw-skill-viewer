@@ -17,12 +17,17 @@ type SkillStatusListEntry = SkillStatusInfo & {
 let cachedStatuses: SkillStatusListEntry[] | null = null
 let cachedAt = 0
 let refreshPromise: Promise<SkillStatusListEntry[]> | null = null
+let cachedFsEntries: SkillFsEntry[] | null = null
+let cachedNameCounts: Map<string, number> | null = null
+let fsEntriesPromise: Promise<SkillFsEntry[]> | null = null
 
 const STATUS_TTL_MS = 5 * 60 * 1000
 
 export function invalidateSkillStatusCache() {
   cachedStatuses = null
   cachedAt = 0
+  cachedFsEntries = null
+  cachedNameCounts = null
 }
 
 async function refreshSkillStatuses(): Promise<SkillStatusListEntry[]> {
@@ -80,7 +85,7 @@ async function listDirectories(dir: string): Promise<string[]> {
   return entries.filter((entry) => entry.isDirectory() && !IGNORED_NAMES.has(entry.name)).map((entry) => entry.name)
 }
 
-async function listSkillFsEntries(): Promise<SkillFsEntry[]> {
+async function refreshSkillFsEntries(): Promise<SkillFsEntry[]> {
   const entries: SkillFsEntry[] = []
   for (const root of SKILL_ROOTS) {
     const names = await listDirectories(root.dir).catch(() => [])
@@ -92,7 +97,31 @@ async function listSkillFsEntries(): Promise<SkillFsEntry[]> {
       })
     }
   }
+  cachedFsEntries = entries
+  cachedNameCounts = new Map<string, number>()
+  for (const entry of entries) {
+    cachedNameCounts.set(entry.name, (cachedNameCounts.get(entry.name) ?? 0) + 1)
+  }
   return entries
+}
+
+async function loadSkillFsEntries(force = false): Promise<SkillFsEntry[]> {
+  if (force) {
+    cachedFsEntries = null
+    cachedNameCounts = null
+  }
+
+  if (cachedFsEntries) return cachedFsEntries
+  if (fsEntriesPromise) return fsEntriesPromise
+
+  fsEntriesPromise = refreshSkillFsEntries().finally(() => {
+    fsEntriesPromise = null
+  })
+  return fsEntriesPromise
+}
+
+function getCachedNameCount(name: string): number {
+  return cachedNameCounts?.get(name) ?? 0
 }
 
 function canonicalFallbackStatus(
@@ -109,7 +138,13 @@ function canonicalFallbackStatus(
     return path.resolve(fallback.baseDir) === path.resolve(baseDir) ? fallback : undefined
   }
 
-  const fallbackCategory = categoryFromSource(fallback.source)
+  const fallbackSource = typeof fallback.source === 'string' ? fallback.source.trim() : ''
+  if (!fallbackSource) {
+    const canonicalRootCategory = SKILL_ROOTS[0]?.category
+    return canonicalRootCategory === rootCategory ? fallback : undefined
+  }
+
+  const fallbackCategory = categoryFromSource(fallbackSource)
   return fallbackCategory === rootCategory ? fallback : undefined
 }
 
@@ -186,11 +221,7 @@ export async function getSkills(force = false): Promise<SkillRecord[]> {
     byName.set(status.name, existing)
   }
 
-  const fsEntries = await listSkillFsEntries()
-  const nameCounts = new Map<string, number>()
-  for (const entry of fsEntries) {
-    nameCounts.set(entry.name, (nameCounts.get(entry.name) ?? 0) + 1)
-  }
+  const fsEntries = await loadSkillFsEntries(force)
 
   const skills: SkillRecord[] = []
   for (const entry of fsEntries) {
@@ -205,8 +236,9 @@ export async function getSkills(force = false): Promise<SkillRecord[]> {
       // ignore
     }
     const fallbackStatuses = byName.get(name) ?? []
-    const status = byPath.get(path.resolve(baseDir)) ?? canonicalFallbackStatus(baseDir, root.category, fallbackStatuses, nameCounts.get(name) ?? 0)
-    if (!status && (nameCounts.get(name) ?? 0) > 1 && fallbackStatuses.length === 1) {
+    const nameCount = getCachedNameCount(name)
+    const status = byPath.get(path.resolve(baseDir)) ?? canonicalFallbackStatus(baseDir, root.category, fallbackStatuses, nameCount)
+    if (!status && nameCount > 1 && fallbackStatuses.length === 1) {
       continue
     }
     const category = status?.source ? categoryFromSource(status.source) : root.category
@@ -253,8 +285,8 @@ export async function getSkill(skillId: string, force = false): Promise<SkillRec
   const statuses = await loadSkillStatuses(force)
   const exactStatus = statuses.find((entry) => path.resolve(entry.baseDir ?? '') === path.resolve(baseDir))
   const fallbackStatuses = statuses.filter((entry) => entry.name === name)
-  const fsEntries = await listSkillFsEntries()
-  const nameCount = fsEntries.filter((entry) => entry.name === name).length
+  await loadSkillFsEntries(force)
+  const nameCount = getCachedNameCount(name)
   const status = exactStatus ?? canonicalFallbackStatus(baseDir, root.category, fallbackStatuses, nameCount)
   const stats = await statDirectoryRecursive(baseDir)
 
