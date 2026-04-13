@@ -5,10 +5,12 @@ import { useLiveUpdates } from '../hooks/useLiveUpdates'
 import { fetchSkills, invalidateApiCache } from '../lib/api'
 import type { SkillRecord } from '../types'
 
+type ReadinessFilter = 'all' | 'ready' | 'not-ready'
+
 export function SkillLibraryPage() {
   const [skills, setSkills] = useState<SkillRecord[]>([])
   const [query, setQuery] = useState('')
-  const [readyOnly, setReadyOnly] = useState(true)
+  const [readinessFilter, setReadinessFilter] = useState<ReadinessFilter>('ready')
   const [error, setError] = useState('')
 
   const loadSkills = useCallback(async (force = false) => {
@@ -38,10 +40,14 @@ export function SkillLibraryPage() {
   const filtered = useMemo(() => {
     return skills.filter((skill) => {
       const matchesQuery = query.trim().length === 0 || `${skill.name} ${skill.description}`.toLowerCase().includes(query.toLowerCase())
-      const matchesReady = readyOnly ? skill.ready : true
-      return matchesQuery && matchesReady
+      const matchesReadiness = readinessFilter === 'ready'
+        ? skill.ready
+        : readinessFilter === 'not-ready'
+          ? !skill.ready
+          : true
+      return matchesQuery && matchesReadiness
     })
-  }, [query, readyOnly, skills])
+  }, [query, readinessFilter, skills])
 
   return (
     <div className="page-shell">
@@ -53,9 +59,36 @@ export function SkillLibraryPage() {
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search skills by name or description"
         />
-        <div className="toggle-row">
-          <label><input type="checkbox" checked={readyOnly} onChange={(event) => setReadyOnly(event.target.checked)} /> Ready only</label>
-        </div>
+        <fieldset className="toggle-row" aria-label="Readiness filter">
+          <legend className="sr-only">Readiness filter</legend>
+          <label>
+            <input
+              type="radio"
+              name="readiness-filter"
+              checked={readinessFilter === 'ready'}
+              onChange={() => setReadinessFilter('ready')}
+            />
+            Ready only
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="readiness-filter"
+              checked={readinessFilter === 'not-ready'}
+              onChange={() => setReadinessFilter('not-ready')}
+            />
+            Not ready only
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="readiness-filter"
+              checked={readinessFilter === 'all'}
+              onChange={() => setReadinessFilter('all')}
+            />
+            All skills
+          </label>
+        </fieldset>
       </section>
       <section className="panel">
         {error ? <div className="viewer-empty">Failed to load skills: {error}</div> : <SkillTable skills={filtered} />}

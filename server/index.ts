@@ -4,7 +4,6 @@ import { fileURLToPath } from 'node:url'
 import express from 'express'
 import { API_PORT } from './config.js'
 import { getFileContent } from './files.js'
-import { getDiff, getHistory } from './history.js'
 import { getSkill, getSkills, buildTree } from './skills.js'
 import type { SkillRecord } from './types.js'
 import { registerEventsClient, startWatcher } from './watch.js'
@@ -57,28 +56,6 @@ app.get('/api/skills/:skillId/file', async (req, res, next) => {
     const relativePath = String(req.query.path || 'SKILL.md')
     const file = await getFileContent(req.params.skillId, relativePath)
     res.json(file)
-  } catch (error) {
-    next(error)
-  }
-})
-
-app.get('/api/skills/:skillId/history', async (req, res, next) => {
-  try {
-    const relativePath = String(req.query.path || 'SKILL.md')
-    const history = await getHistory(req.params.skillId, relativePath)
-    res.json({ history })
-  } catch (error) {
-    next(error)
-  }
-})
-
-app.get('/api/skills/:skillId/diff', async (req, res, next) => {
-  try {
-    const relativePath = String(req.query.path || 'SKILL.md')
-    const fromRef = String(req.query.from || 'HEAD~1')
-    const toRef = String(req.query.to || 'HEAD')
-    const diff = await getDiff(req.params.skillId, relativePath, fromRef, toRef)
-    res.json({ diff })
   } catch (error) {
     next(error)
   }

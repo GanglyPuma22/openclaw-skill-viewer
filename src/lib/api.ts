@@ -1,4 +1,4 @@
-import type { FileContentResponse, FileTreeNode, HistoryEntry, SkillRecord } from '../types'
+import type { FileContentResponse, FileTreeNode, SkillRecord } from '../types'
 
 const cache = new Map<string, unknown>()
 
@@ -43,12 +43,4 @@ export function fetchSkill(skillId: string, force = false) {
 
 export function fetchFile(skillId: string, relativePath: string, force = false) {
   return requestJson<FileContentResponse>(`/api/skills/${encodeURIComponent(skillId)}/file?path=${encodeURIComponent(relativePath)}`, force)
-}
-
-export function fetchHistory(skillId: string, relativePath: string, force = false) {
-  return requestJson<{ history: HistoryEntry[] }>(`/api/skills/${encodeURIComponent(skillId)}/history?path=${encodeURIComponent(relativePath)}`, force)
-}
-
-export function fetchDiff(skillId: string, relativePath: string, fromRef: string, toRef = 'HEAD') {
-  return requestJson<{ diff: string }>(`/api/skills/${encodeURIComponent(skillId)}/diff?path=${encodeURIComponent(relativePath)}&from=${encodeURIComponent(fromRef)}&to=${encodeURIComponent(toRef)}`, true)
 }

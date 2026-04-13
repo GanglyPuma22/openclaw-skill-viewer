@@ -3,11 +3,10 @@ import { useParams } from 'react-router-dom'
 import { FileTree } from '../components/FileTree'
 import { FileViewer } from '../components/FileViewer'
 import { Topbar } from '../components/Topbar'
-import { HistoryPanel } from '../components/history/HistoryPanel'
 import { useLiveUpdates } from '../hooks/useLiveUpdates'
-import { fetchDiff, fetchFile, fetchHistory, fetchSkill, invalidateApiCache } from '../lib/api'
+import { fetchFile, fetchSkill, invalidateApiCache } from '../lib/api'
 import { formatBytes, formatDate } from '../lib/format'
-import type { FileContentResponse, FileTreeNode, HistoryEntry, SkillRecord } from '../types'
+import type { FileContentResponse, FileTreeNode, SkillRecord } from '../types'
 
 export function SkillDetailPage() {
   const { skillId = '' } = useParams()
@@ -15,13 +14,9 @@ export function SkillDetailPage() {
   const [tree, setTree] = useState<FileTreeNode[]>([])
   const [selectedPath, setSelectedPath] = useState('SKILL.md')
   const [file, setFile] = useState<FileContentResponse | null>(null)
-  const [history, setHistory] = useState<HistoryEntry[]>([])
-  const [diff, setDiff] = useState('')
   const [rawMode, setRawMode] = useState(false)
-  const [historyLoadedFor, setHistoryLoadedFor] = useState('')
   const selectedPathRef = useRef(selectedPath)
   const fileRequestIdRef = useRef(0)
-  const historyRequestIdRef = useRef(0)
 
   useEffect(() => {
     selectedPathRef.current = selectedPath
@@ -41,17 +36,6 @@ export function SkillDetailPage() {
       return
     }
     setFile(fileResult)
-    setDiff('')
-  }, [skillId])
-
-  const loadHistory = useCallback(async (path: string, force = false) => {
-    const requestId = ++historyRequestIdRef.current
-    const historyResult = await fetchHistory(skillId, path, force)
-    if (requestId !== historyRequestIdRef.current || selectedPathRef.current !== path) {
-      return
-    }
-    setHistory(historyResult.history)
-    setHistoryLoadedFor(path)
   }, [skillId])
 
   useEffect(() => {
@@ -60,15 +44,8 @@ export function SkillDetailPage() {
 
   useEffect(() => {
     if (!selectedPath) return
-    setHistory([])
-    setHistoryLoadedFor('')
     void loadFile(selectedPath)
   }, [loadFile, selectedPath])
-
-  useEffect(() => {
-    if (!selectedPath) return
-    void loadHistory(selectedPath)
-  }, [loadHistory, selectedPath])
 
   const handleLiveUpdate = useCallback(() => {
     const currentPath = selectedPathRef.current
@@ -76,9 +53,8 @@ export function SkillDetailPage() {
     void loadSkill(true)
     if (currentPath) {
       void loadFile(currentPath, true)
-      void loadHistory(currentPath, true)
     }
-  }, [loadFile, loadHistory, loadSkill, skillId])
+  }, [loadFile, loadSkill, skillId])
 
   useLiveUpdates(handleLiveUpdate)
 
@@ -106,7 +82,6 @@ export function SkillDetailPage() {
             </div>
             <div className="detail-main">
               <FileViewer file={file} rawMode={rawMode} onToggleMode={() => setRawMode((value) => !value)} />
-              <HistoryPanel history={history} diff={diff} loading={!historyLoadedFor || historyLoadedFor !== selectedPath} onSelectDiff={(fromRef) => { void fetchDiff(skillId, selectedPath, fromRef).then((result) => setDiff(result.diff)) }} />
             </div>
           </section>
         </>

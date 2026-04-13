@@ -6,9 +6,9 @@ Local-only web UI for browsing OpenClaw skills from the filesystem.
 
 - discovers skills from multiple local roots
 - groups skills by install location
+- filters the library by ready / not-ready setup state
 - opens a skill detail page with file tree + default `SKILL.md` view
 - renders markdown nicely and supports raw source view
-- exposes git-backed history and diff views when available
 - watches for local changes and refreshes via live updates
 
 This repo is intentionally **view-only**. It reads skill data from the local machine at runtime and does not edit skill files.
@@ -43,12 +43,10 @@ Runtime API endpoints are served from the same origin:
 - `GET /api/skills`
 - `GET /api/skills/:skillId`
 - `GET /api/skills/:skillId/file`
-- `GET /api/skills/:skillId/history`
-- `GET /api/skills/:skillId/diff`
 - `GET /api/events`
 
 ## Notes
 
 - local paths stay server-side; the UI uses route-safe skill ids / path tokens
-- git history is best-effort and depends on the owning repo being available
+- readiness comes from the local OpenClaw gateway skill status output
 - this is a local tool, not a hosted multi-user service
