@@ -1,5 +1,6 @@
 import path from 'node:path'
 import os from 'node:os'
+import { execFileSync } from 'node:child_process'
 
 export const API_PORT = 4174
 export const CLIENT_PORT = 4173
@@ -17,7 +18,20 @@ function envPath(name: string, fallback: string) {
   return expandHome(value || fallback)
 }
 
-const defaultBuiltInRoot = path.join(home, '.nvm/versions/node', process.version, 'lib/node_modules/openclaw/skills')
+function detectDefaultBuiltInRoot() {
+  try {
+    const npmGlobalRoot = execFileSync('npm', ['root', '-g'], { encoding: 'utf8' }).trim()
+    if (npmGlobalRoot) {
+      return path.join(npmGlobalRoot, 'openclaw/skills')
+    }
+  } catch {
+    // fall through to a version-based nvm-style default
+  }
+
+  return path.join(home, '.nvm/versions/node', process.version, 'lib/node_modules/openclaw/skills')
+}
+
+const defaultBuiltInRoot = detectDefaultBuiltInRoot()
 const defaultWorkspaceRoot = path.join(home, '.openclaw/workspace/skills')
 const defaultOtherRoot = path.join(home, '.agents/skills')
 

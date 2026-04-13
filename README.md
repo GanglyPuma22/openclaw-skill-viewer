@@ -2,6 +2,8 @@
 
 A **local-first web UI** for browsing OpenClaw skills, checking which ones are actually ready to use, and inspecting skill contents without digging through multiple filesystem roots.
 
+![OpenClaw Skill Viewer demo](docs/media/skill-viewer-demo.gif)
+
 ![OpenClaw Skill Viewer library screenshot](docs/media/skill-library-overview.png)
 
 ## Why this exists
@@ -85,7 +87,7 @@ By default the app reads these skill roots:
 You can override them with environment variables:
 
 ```bash
-export OPENCLAW_SKILL_VIEWER_BUILTIN_ROOT="$HOME/.nvm/versions/node/v24.11.1/lib/node_modules/openclaw/skills"
+export OPENCLAW_SKILL_VIEWER_BUILTIN_ROOT="$HOME/.nvm/versions/node/<current-node-version>/lib/node_modules/openclaw/skills"
 export OPENCLAW_SKILL_VIEWER_WORKSPACE_ROOT="$HOME/.openclaw/workspace/skills"
 export OPENCLAW_SKILL_VIEWER_OTHER_ROOT="$HOME/.agents/skills"
 ```
