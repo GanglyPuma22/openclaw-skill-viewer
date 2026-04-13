@@ -2,7 +2,7 @@
   "name": "openclaw-skill-viewer",
   "private": true,
   "version": "0.1.0",
-  "description": "Local-first web UI for browsing OpenClaw skills, checking readiness, and inspecting skill contents.",
+  "description": "Local-first OpenClaw skills dashboard for browsing skills, checking readiness, and exploring skill files.",
   "license": "MIT",
   "type": "module",
   "homepage": "https://github.com/GanglyPuma22/openclaw-skill-viewer",

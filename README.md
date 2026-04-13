@@ -2,6 +2,8 @@
 
 A **local-first OpenClaw skills dashboard** for browsing OpenClaw skills, checking which ones are actually ready to use, and inspecting skill contents without digging through multiple filesystem roots.
 
+If you want a way to **view your OpenClaw skills in a dashboard**, see which skills are ready, and click into the underlying files, this repo is built for exactly that workflow.
+
 ![OpenClaw Skill Viewer demo](docs/media/skill-viewer-demo.gif)
 
 ## Why this exists
@@ -26,6 +28,12 @@ If you have ever searched for something like:
 - **see which OpenClaw skills need setup**
 
 that is exactly the problem this repo is trying to solve.
+
+## Who this is for
+
+- OpenClaw users who want a cleaner way to browse bundled, workspace, and custom skills
+- people trying to figure out which skills are ready vs still missing setup
+- anyone who wants a lightweight local dashboard instead of manually opening skill folders and `SKILL.md` files
 
 ## What it does
 
