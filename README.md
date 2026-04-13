@@ -1,10 +1,8 @@
 # OpenClaw Skill Viewer
 
-A **local-first web UI** for browsing OpenClaw skills, checking which ones are actually ready to use, and inspecting skill contents without digging through multiple filesystem roots.
+A **local-first OpenClaw skills dashboard** for browsing OpenClaw skills, checking which ones are actually ready to use, and inspecting skill contents without digging through multiple filesystem roots.
 
 ![OpenClaw Skill Viewer demo](docs/media/skill-viewer-demo.gif)
-
-![OpenClaw Skill Viewer library screenshot](docs/media/skill-library-overview.png)
 
 ## Why this exists
 
@@ -20,6 +18,14 @@ That is fine for power users, but it gets annoying fast when you want to answer 
 - What is inside this skill folder?
 
 This project gives that workflow a fast local UI instead of making you spelunk through directories and `SKILL.md` files by hand.
+
+If you have ever searched for something like:
+- **OpenClaw skills dashboard**
+- **how to view OpenClaw skills**
+- **browse OpenClaw skills in a web UI**
+- **see which OpenClaw skills need setup**
+
+that is exactly the problem this repo is trying to solve.
 
 ## What it does
 
@@ -107,6 +113,22 @@ The UI and API are served from the same origin.
 - `GET /api/skills/:skillId`
 - `GET /api/skills/:skillId/file`
 - `GET /api/events`
+
+## FAQ / common use cases
+
+### How do I view OpenClaw skills in a dashboard?
+Run this project locally. It scans your OpenClaw skill roots, shows them in a table, and lets you click into each skill to inspect its files and `SKILL.md`.
+
+### How do I see which OpenClaw skills are ready vs still missing setup?
+The library includes readiness filters for:
+- **Ready only**
+- **Not ready only**
+- **All skills**
+
+Readiness comes from the local `openclaw skills list --json` status output.
+
+### Can it show bundled, workspace, and custom skills together?
+Yes. By default it reads built-in, workspace, and custom/personal skill roots and shows them in one dashboard.
 
 ## Current limitations
 

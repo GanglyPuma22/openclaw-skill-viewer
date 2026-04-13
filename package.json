@@ -15,7 +15,11 @@
   },
   "keywords": [
     "openclaw",
+    "openclaw-skills",
+    "skill-dashboard",
+    "skill-viewer",
     "skills",
+    "dashboard",
     "react",
     "express",
     "local-first",
